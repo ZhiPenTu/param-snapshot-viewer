@@ -1,0 +1,108 @@
+{
+  "format": "param-snapshot",
+  "version": 1,
+  "exportedAt": "2026-10-23T13:47:29+08:00",
+  "device": {
+    "name": "测试近端机",
+    "typeName": "WJQ400D数字光纤直放站近端机",
+    "devId": 21120006,
+    "devSubId": 0,
+    "ip": "192.168.16.30",
+    "pollResult": "success",
+    "pollResultLabel": "完成",
+    "collectedAt": "2026-10-23T13:22:05",
+    "finishedAt": "2026-10-23T13:22:11"
+  },
+  "categories": [
+    {
+      "name": "设备基本信息",
+      "parameters": [
+        {
+          "key": "0x0001",
+          "objectId": 1,
+          "name": "设备厂商代码",
+          "length": 1,
+          "mode": "可读可设置",
+          "readOnly": false,
+          "value": "10",
+          "unit": ""
+        },
+        {
+          "key": "0x0002",
+          "objectId": 2,
+          "name": "设备类别",
+          "length": 1,
+          "mode": "可读可设置",
+          "readOnly": false,
+          "value": "203",
+          "unit": ""
+        },
+        {
+          "key": "0x0003",
+          "objectId": 3,
+          "name": "设备型号",
+          "length": 20,
+          "mode": "可读可设置",
+          "readOnly": false,
+          "value": "WJQ400",
+          "unit": ""
+        },
+        {
+          "key": "0x0004",
+          "objectId": 4,
+          "name": "设备生产序列号",
+          "length": 20,
+          "mode": "可读可设置",
+          "readOnly": false,
+          "value": "",
+          "unit": ""
+        },
+        {
+          "key": "0x0009",
+          "objectId": 9,
+          "name": "监控版本信息",
+          "length": 20,
+          "mode": "可读可设置",
+          "readOnly": false,
+          "value": "DRTD-OMU-QZTT-SV1.0",
+          "unit": ""
+        },
+        {
+          "key": "0x0010",
+          "objectId": 16,
+          "name": "站点编号",
+          "length": 4,
+          "mode": "可读可设置",
+          "readOnly": false,
+          "value": "21120006",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "name": "设备状态信息",
+      "parameters": [
+        {
+          "key": "0x0101",
+          "objectId": 257,
+          "name": "设备工作状态",
+          "length": 1,
+          "mode": "只读",
+          "readOnly": true,
+          "value": "正常",
+          "unit": ""
+        },
+        {
+          "key": "0x0102",
+          "objectId": 258,
+          "name": "机内温度",
+          "length": 2,
+          "mode": "只读",
+          "readOnly": true,
+          "value": "36.5",
+          "unit": "℃"
+        }
+      ]
+    }
+  ]
+}
