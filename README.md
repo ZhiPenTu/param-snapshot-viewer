@@ -15,6 +15,12 @@
 3. 在左侧列表切换不同设备，顶部页签切换参数分类
 4. 需要交付或归档时，点击「导出当前设备」或「导出全部」生成 CSV
 
+## 安装
+
+从 Releases 下载对应平台的安装包：macOS 为 `.dmg`，Windows 为 `.msi`／`.exe`，Linux 为 `.AppImage`／`.deb`。
+
+安装包未做商业代码签名，首次打开时系统可能拦截：macOS 在应用上右键「打开」，Windows 在 SmartScreen 提示中点「更多信息 → 仍要运行」。
+
 ## 开发
 
 需要 Node.js 20+；打包桌面安装包还需要 Rust 工具链（见 [Tauri 环境准备](https://tauri.app/start/prerequisites/)）。

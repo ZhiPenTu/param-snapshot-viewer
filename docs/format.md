@@ -53,7 +53,7 @@
     "typeName": "WJQ400D数字光纤直放站近端机",
     "devId": 21120006,
     "devSubId": 0,
-    "ip": "192.168.16.30",
+    "ip": "192.0.2.30",
     "pollResult": "success",
     "pollResultLabel": "完成",
     "collectedAt": "2026-10-23T13:22:05",

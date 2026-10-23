@@ -7,7 +7,18 @@ on:
       - 'v*'
 
 jobs:
+  guard:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 发布只允许由 v* 标签触发
+        run: |
+          if [[ "${GITHUB_REF}" != refs/tags/v* ]]; then
+            echo "::error::发布必须由 v* 标签触发，当前是 ${GITHUB_REF}"
+            exit 1
+          fi
+
   build:
+    needs: guard
     permissions:
       contents: write
     strategy:

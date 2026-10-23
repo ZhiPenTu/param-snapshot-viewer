@@ -20,7 +20,7 @@ test('导入多份快照后可切换设备并查看分类参数', async ({ page 
 
   // 默认展示最后导入的一份
   await expect(page.locator('.device-header-strip')).toContainText('测试远端机')
-  await expect(page.locator('.device-header-strip')).toContainText('设备IP:192.168.16.31')
+  await expect(page.locator('.device-header-strip')).toContainText('设备IP:192.0.2.31')
   await expect(page.locator('.param-tab')).toHaveCount(2)
 
   // 切回第一份，检查表格内容
