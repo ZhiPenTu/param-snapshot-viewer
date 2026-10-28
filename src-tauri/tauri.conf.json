@@ -60,5 +60,13 @@
         "bundleMediaFramework": false
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/ZhiPenTu/param-snapshot-viewer/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc1MEU0MjZEQTI4NDJGRjEKUldUeEw0U2liVUlPZGV2cFFjeDlyWEpqK1FHWG5nV1d0SGFuaC90a0VZclphMHFyZCt3d1BkSTcK"
+    }
   }
 }

@@ -9,6 +9,7 @@
         <button class="primary-action" @click="pickFiles">导入快照</button>
         <button class="plain-action" :disabled="!current" @click="exportCurrentCsv">导出当前设备</button>
         <button class="plain-action" :disabled="!snapshots.length" @click="exportAllCsv">导出全部</button>
+        <UpdateChecker />
       </div>
       <span class="toolbar-meta">已导入 {{ snapshots.length }} 份</span>
     </header>
@@ -57,6 +58,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import SnapshotList from './components/SnapshotList.vue'
 import DeviceParamPanel from './components/DeviceParamPanel.vue'
+import UpdateChecker from './components/UpdateChecker.vue'
 import { readTextFile, saveTextFile } from './lib/fileAccess.js'
 import { buildSnapshotCsv } from './lib/csv.js'
 import {

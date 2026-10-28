@@ -127,3 +127,9 @@ test('快照列表可以收起并展开', async ({ page }) => {
   await expect(page.locator('.snapshot-pane')).not.toHaveClass(/is-collapsed/)
   await expect(page.locator('.snapshot-item')).toHaveCount(1)
 })
+
+test('浏览器预览中检查更新会提示仅在桌面版可用', async ({ page }) => {
+  await page.getByRole('button', { name: '检查更新' }).first().click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.locator('.el-alert--error')).toContainText('浏览器预览')
+})

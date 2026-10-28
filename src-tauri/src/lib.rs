@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::PathBuf;
 
+mod update;
+
 /// 把导出的文本内容写入用户选择的路径（CSV 等），只写文件，不读取其他数据。
 #[tauri::command]
 fn save_text_file(path: String, content: String) -> Result<(), String> {
@@ -17,7 +19,13 @@ fn save_text_file(path: String, content: String) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![save_text_file])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(update::PendingUpdate::default())
+        .invoke_handler(tauri::generate_handler![
+            save_text_file,
+            update::check_app_update,
+            update::install_app_update
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
