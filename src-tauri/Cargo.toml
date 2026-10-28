@@ -1,6 +1,6 @@
 [package]
 name = "param-snapshot-viewer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Offline viewer for device parameter snapshots exported by the network management system"
 authors = ["param-snapshot-viewer contributors"]
 edition = "2021"
