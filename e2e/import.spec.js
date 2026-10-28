@@ -114,3 +114,16 @@ test('拖拽批次数组文件同样导入整批设备', async ({ page }) => {
   await expect(page.locator('.snapshot-item')).toHaveCount(2)
   await expect(page.locator('.toolbar-meta')).toHaveText('已导入 2 份')
 })
+
+test('快照列表可以收起并展开', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
+  await expect(page.locator('.snapshot-item')).toHaveCount(1)
+
+  await page.getByRole('button', { name: '收起快照列表' }).click()
+  await expect(page.locator('.snapshot-pane')).toHaveClass(/is-collapsed/)
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+
+  await page.getByRole('button', { name: '展开快照列表' }).click()
+  await expect(page.locator('.snapshot-pane')).not.toHaveClass(/is-collapsed/)
+  await expect(page.locator('.snapshot-item')).toHaveCount(1)
+})

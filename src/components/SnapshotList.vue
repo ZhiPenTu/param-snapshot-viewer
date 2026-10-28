@@ -1,43 +1,81 @@
 <template>
-  <aside class="snapshot-pane">
-    <div class="pane-head">
-      <span class="pane-title">快照列表</span>
-      <span class="pane-count">{{ snapshots.length }}</span>
-    </div>
-
-    <div v-if="!snapshots.length" class="pane-empty">
-      <p>尚未导入快照</p>
-      <p class="hint">导入后可在这里切换设备</p>
-    </div>
-
-    <ul v-else class="snapshot-list">
-      <li
-        v-for="item in snapshots"
-        :key="item.id"
-        :class="['snapshot-item', item.id === activeId ? 'is-active' : '']"
-        @click="emit('select', item.id)"
+  <aside :class="['snapshot-pane', collapsed ? 'is-collapsed' : '']">
+    <div v-if="collapsed" class="pane-rail">
+      <button
+        class="pane-toggle"
+        type="button"
+        aria-label="展开快照列表"
+        title="展开快照列表"
+        aria-expanded="false"
+        @click="toggleCollapsed"
       >
-        <div class="item-main">
-          <div class="item-title">{{ snapshotTitle(item) }}</div>
-          <div class="item-meta">
-            <span>设备ID：{{ item.device.devId ?? '—' }}</span>
-            <span>采集：{{ formatCollectedAt(item.device.collectedAt) || '—' }}</span>
-          </div>
-          <div class="item-sub">
-            <span class="item-badge">{{ item.parameterCount }} 个参数</span>
-            <span v-if="item.device.pollResultLabel" :class="['item-status', statusClass(item)]">
-              {{ item.device.pollResultLabel }}
-            </span>
-          </div>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M6 3.5 10.5 8 6 12.5" />
+        </svg>
+      </button>
+      <div class="rail-label">
+        <span>快照列表</span>
+        <span class="rail-count">{{ snapshots.length }}</span>
+      </div>
+    </div>
+
+    <template v-else>
+      <div class="pane-head">
+        <span class="pane-title">快照列表</span>
+        <div class="pane-head-actions">
+          <span class="pane-count">{{ snapshots.length }}</span>
+          <button
+            class="pane-toggle"
+            type="button"
+            aria-label="收起快照列表"
+            title="收起快照列表"
+            aria-expanded="true"
+            @click="toggleCollapsed"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M10 3.5 5.5 8 10 12.5" />
+            </svg>
+          </button>
         </div>
-        <button class="item-remove" title="移除该快照" @click.stop="emit('remove', item.id)">移除</button>
-      </li>
-    </ul>
+      </div>
+
+      <div v-if="!snapshots.length" class="pane-empty">
+        <p>尚未导入快照</p>
+        <p class="hint">导入后可在这里切换设备</p>
+      </div>
+
+      <ul v-else class="snapshot-list">
+        <li
+          v-for="item in snapshots"
+          :key="item.id"
+          :class="['snapshot-item', item.id === activeId ? 'is-active' : '']"
+          @click="emit('select', item.id)"
+        >
+          <div class="item-main">
+            <div class="item-title">{{ snapshotTitle(item) }}</div>
+            <div class="item-meta">
+              <span>设备ID：{{ item.device.devId ?? '—' }}</span>
+              <span>采集：{{ formatCollectedAt(item.device.collectedAt) || '—' }}</span>
+            </div>
+            <div class="item-sub">
+              <span class="item-badge">{{ item.parameterCount }} 个参数</span>
+              <span v-if="item.device.pollResultLabel" :class="['item-status', statusClass(item)]">
+                {{ item.device.pollResultLabel }}
+              </span>
+            </div>
+          </div>
+          <button class="item-remove" title="移除该快照" @click.stop="emit('remove', item.id)">移除</button>
+        </li>
+      </ul>
+    </template>
   </aside>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { formatCollectedAt, snapshotTitle } from '../lib/snapshot.js'
+
+const STORAGE_KEY = 'param-snapshot-viewer:sidebar-collapsed'
 
 defineProps({
   snapshots: { type: Array, default: () => [] },
@@ -45,6 +83,23 @@ defineProps({
 })
 
 const emit = defineEmits(['select', 'remove'])
+
+const collapsed = ref(readCollapsed())
+
+function readCollapsed() {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function toggleCollapsed() {
+  collapsed.value = !collapsed.value
+  try {
+    window.localStorage.setItem(STORAGE_KEY, collapsed.value ? '1' : '0')
+  } catch {}
+}
 
 function statusClass(item) {
   const result = item.device.pollResult
@@ -63,6 +118,40 @@ function statusClass(item) {
   min-height: 0;
   background: #f7f9fb;
   border-right: 1px solid #dfe4ea;
+  transition: width 0.18s ease, flex-basis 0.18s ease;
+}
+
+.snapshot-pane.is-collapsed {
+  width: 44px;
+  flex: 0 0 44px;
+}
+
+.pane-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 12px;
+  min-height: 0;
+}
+
+.rail-label {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #2a4a6a;
+}
+
+.rail-count {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #7b8794;
 }
 
 .pane-head {
@@ -75,10 +164,47 @@ function statusClass(item) {
   color: #2a4a6a;
 }
 
+.pane-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .pane-count {
   font-size: 12px;
   color: #7b8794;
   font-weight: 500;
+}
+
+.pane-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #dfe4ea;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #5a6b7d;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.pane-toggle:hover {
+  background: #ecf5ff;
+  border-color: #a7c8ee;
+  color: #2a4a6a;
+}
+
+.pane-toggle svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .pane-empty {
