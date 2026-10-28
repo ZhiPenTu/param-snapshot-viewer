@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -84,4 +85,32 @@ test('系统真实导出的快照可直接导入展示', async ({ page }) => {
   await expect(rows).toHaveCount(6)
   await expect(rows.nth(4)).toContainText('监控版本信息')
   await expect(rows.nth(4).locator('input')).toHaveValue('DRTD-OMU-QZTT-SV1.0')
+})
+
+test('批次数组文件一次导入整批设备', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-batch.json'))
+
+  const items = page.locator('.snapshot-item')
+  await expect(items).toHaveCount(2)
+  await expect(page.locator('.toolbar-meta')).toHaveText('已导入 2 份')
+
+  // 默认展示数组最后一份
+  await expect(page.locator('.device-header-strip')).toContainText('测试远端机')
+  await items.filter({ hasText: '测试近端机' }).click()
+  await expect(page.locator('.device-header-strip')).toContainText('测试近端机')
+  await expect(page.locator('.param-tab')).toHaveCount(2)
+})
+
+test('拖拽批次数组文件同样导入整批设备', async ({ page }) => {
+  const payload = fs.readFileSync(fixture('snapshot-batch.json'), 'utf8')
+  const dataTransfer = await page.evaluateHandle((text) => {
+    const dt = new DataTransfer()
+    dt.items.add(new File([text], '轮询参数批次_测试.json', { type: 'application/json' }))
+    return dt
+  }, payload)
+
+  await page.locator('.detail-pane').dispatchEvent('drop', { dataTransfer })
+
+  await expect(page.locator('.snapshot-item')).toHaveCount(2)
+  await expect(page.locator('.toolbar-meta')).toHaveText('已导入 2 份')
 })
