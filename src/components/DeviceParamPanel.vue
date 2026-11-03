@@ -53,7 +53,6 @@
         <el-table-column prop="name" label="参数名称" min-width="200" show-overflow-tooltip />
         <el-table-column prop="key" label="对象标识" width="100" />
         <el-table-column prop="length" label="length" width="80" />
-        <el-table-column prop="mode" label="读写属性" width="110" />
         <el-table-column prop="value" label="当前值" min-width="220">
           <template #default="{ row }">
             <el-input :model-value="row.value" readonly size="small" />

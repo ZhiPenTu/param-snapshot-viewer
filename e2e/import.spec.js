@@ -31,6 +31,7 @@ test('导入多份快照后可切换设备并查看分类参数', async ({ page 
   await expect(rows).toHaveCount(6)
   await expect(rows.first()).toContainText('设备厂商代码')
   await expect(rows.first().locator('input')).toHaveValue('10')
+  await expect(page.locator('.el-table__header-wrapper')).not.toContainText('读写属性')
 
   // 切换分类页签
   await page.locator('.param-tab', { hasText: '设备状态信息' }).click()
@@ -54,6 +55,31 @@ test('重复导入同一份快照会跳过', async ({ page }) => {
   await expect(page.locator('.el-message--warning')).toContainText('已经导入过了')
 })
 
+test('拒绝版本 1 的旧版快照并提示重新导出', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-v1.json'))
+
+  await expect(page.locator('.el-message--error')).toContainText('快照版本 1 已不再支持')
+  await expect(page.locator('.el-message--error')).toContainText('请使用网管系统重新导出为版本 2 的快照')
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+  await expect(page.locator('.toolbar-meta')).toHaveText('已导入 0 份')
+})
+
+test('拒绝高于支持版本的快照并提示升级查看器', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', {
+    name: 'snapshot-v3.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      format: 'param-snapshot',
+      version: 3,
+      device: { name: '未来版本设备' },
+      categories: [],
+    })),
+  })
+
+  await expect(page.locator('.el-message--error')).toContainText('快照版本 3 高于本工具支持的版本 2')
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+})
+
 test('导出当前设备 CSV 与全部 CSV', async ({ page }) => {
   await page.setInputFiles('input[type="file"]', [fixture('snapshot-near.json'), fixture('snapshot-remote.json')])
 
@@ -61,6 +87,10 @@ test('导出当前设备 CSV 与全部 CSV', async ({ page }) => {
   await page.getByRole('button', { name: '导出当前设备' }).click()
   const current = await currentDownload
   expect(current.suggestedFilename()).toMatch(/^参数快照_测试远端机_21120007_\d{8}-\d{6}\.csv$/)
+  const csv = fs.readFileSync(await current.path(), 'utf8').replace(/^\ufeff/, '')
+  const header = csv.split('\r\n')[0]
+  expect(header).toBe('设备名称,设备ID,采集时间,分类,序号,参数名称,对象标识,length,当前值,单位')
+  expect(header).not.toContain('读写属性')
 
   const allDownload = page.waitForEvent('download')
   await page.getByRole('button', { name: '导出全部' }).click()

@@ -1,9 +1,9 @@
 // 参数快照（param-snapshot）解析层。
 // 快照由网管系统在「轮询结果 - 查看参数」中导出，本应用只读，不连接任何后端。
-// 格式契约见 docs/format.md；版本号升级时同步调整这里的兼容逻辑。
+// 格式契约见 docs/format.md；版本号升级时同步调整这里的版本校验逻辑。
 
 export const SNAPSHOT_FORMAT = 'param-snapshot'
-export const SUPPORTED_VERSION = 1
+export const SUPPORTED_VERSION = 2
 
 function text(value) {
   return value == null ? '' : String(value)
@@ -26,7 +26,6 @@ function normalizeParameter(raw, index) {
     objectId: toNumberOrNull(p.objectId),
     name: text(p.name),
     length: toNumberOrNull(p.length),
-    mode: text(p.mode),
     readOnly: p.readOnly === true,
     value: text(p.value),
     unit: text(p.unit),
@@ -66,12 +65,17 @@ export function parseSnapshot(raw, { fileName = '' } = {}) {
   if (text(raw.format) !== SNAPSHOT_FORMAT) {
     throw new SnapshotFormatError('文件不是参数快照文件')
   }
-  const version = Number(raw.version)
-  if (!Number.isFinite(version) || version < 1) {
-    throw new SnapshotFormatError('快照版本号无效')
-  }
-  if (version > SUPPORTED_VERSION) {
-    throw new SnapshotFormatError(`快照版本 ${version} 高于本工具支持的版本 ${SUPPORTED_VERSION}，请升级查看器`)
+  if (raw.version !== SUPPORTED_VERSION) {
+    if (raw.version === 1) {
+      throw new SnapshotFormatError('快照版本 1 已不再支持，请使用网管系统重新导出为版本 2 的快照')
+    }
+    if (typeof raw.version === 'number' && Number.isFinite(raw.version)) {
+      if (raw.version > SUPPORTED_VERSION) {
+        throw new SnapshotFormatError(`快照版本 ${raw.version} 高于本工具支持的版本 ${SUPPORTED_VERSION}，请升级查看器`)
+      }
+      throw new SnapshotFormatError(`快照版本 ${raw.version} 低于本工具支持的版本 ${SUPPORTED_VERSION}，请使用网管系统重新导出`)
+    }
+    throw new SnapshotFormatError(`快照版本号无效，本工具仅支持版本 ${SUPPORTED_VERSION}`)
   }
   const categories = Array.isArray(raw.categories) ? raw.categories.map(normalizeCategory) : []
   const device = normalizeDevice(raw.device)
@@ -91,7 +95,7 @@ export function parseSnapshot(raw, { fileName = '' } = {}) {
 }
 
 // 同一设备、同一采集时间视为同一份快照，重复导入时跳过。
-// 采集时间为空时退回导出时间，避免旧文件无法判重。
+// 采集时间为空时退回导出时间，避免无法判重。
 export function snapshotIdentity(device, exportedAt) {
   return [device.devId ?? '', device.name, device.ip, device.collectedAt || exportedAt].join('|')
 }

@@ -7,7 +7,7 @@
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `format` | string | 固定为 `param-snapshot` |
-| `version` | number | 格式版本，当前为 `1` |
+| `version` | number | 格式版本，当前为 `2` |
 | `exportedAt` | string | 导出时间，本地时区 ISO 字符串，如 `2026-10-23T13:22:05+08:00` |
 | `device` | object | 设备信息 |
 | `categories` | array | 参数分类，按导出顺序展示 |
@@ -36,7 +36,6 @@
 | `objectId` | 对象标识的十进制值 |
 | `name` | 参数名称 |
 | `length` | 参数长度（字节） |
-| `mode` | 读写属性文案，如 `可读可设置`／`只读` |
 | `readOnly` | 是否只读 |
 | `value` | 当前值（已按协议解释后的展示值） |
 | `unit` | 单位，可能为空字符串 |
@@ -46,7 +45,7 @@
 ```json
 {
   "format": "param-snapshot",
-  "version": 1,
+  "version": 2,
   "exportedAt": "2026-10-23T13:22:05+08:00",
   "device": {
     "name": "测试近端机",
@@ -68,7 +67,6 @@
           "objectId": 1,
           "name": "设备厂商代码",
           "length": 1,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "10",
           "unit": ""
@@ -85,8 +83,8 @@
 
 ```json
 [
-  { "format": "param-snapshot", "version": 1, "device": { ... }, "categories": [ ... ] },
-  { "format": "param-snapshot", "version": 1, "device": { ... }, "categories": [ ... ] }
+  { "format": "param-snapshot", "version": 2, "device": { ... }, "categories": [ ... ] },
+  { "format": "param-snapshot", "version": 2, "device": { ... }, "categories": [ ... ] }
 ]
 ```
 
@@ -97,7 +95,11 @@
 
 ## 版本规则
 
+- 查看器自 `v0.3.0` 起仅接受 `version: 2`；已发布的 `v0.2.0` 及更早版本无法读取版本 `2` 快照，需升级查看器。
+- 本工具只接受 `version` 精确等于 `2` 的快照，不提供旧版本兼容分支。
 - 新增可选字段不升版本；本工具忽略未知字段。
 - 删除字段、改名、改变语义必须提升 `version`，导出方与工具同步升级。
-- 工具遇到高于支持版本的快照会拒绝导入并提示升级，不猜测字段含义。
+- 遇到 `version` 为 `1` 的旧版快照会拒绝导入，并提示使用网管系统重新导出为版本 `2`。
+- 遇到高于 `2` 的版本会拒绝导入并提示升级查看器，不猜测字段含义。
+- 版本号缺失、非数值或不是精确的 `2` 时同样拒绝导入并给出明确提示。
 - 同一设备、同一采集时间的快照视为同一份数据，重复导入会被跳过。

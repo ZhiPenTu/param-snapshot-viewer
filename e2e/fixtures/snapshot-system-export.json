@@ -1,6 +1,6 @@
 {
   "format": "param-snapshot",
-  "version": 1,
+  "version": 2,
   "exportedAt": "2026-10-23T13:47:29+08:00",
   "device": {
     "name": "测试近端机",
@@ -22,7 +22,6 @@
           "objectId": 1,
           "name": "设备厂商代码",
           "length": 1,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "10",
           "unit": ""
@@ -32,7 +31,6 @@
           "objectId": 2,
           "name": "设备类别",
           "length": 1,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "203",
           "unit": ""
@@ -42,7 +40,6 @@
           "objectId": 3,
           "name": "设备型号",
           "length": 20,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "WJQ400",
           "unit": ""
@@ -52,7 +49,6 @@
           "objectId": 4,
           "name": "设备生产序列号",
           "length": 20,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "",
           "unit": ""
@@ -62,7 +58,6 @@
           "objectId": 9,
           "name": "监控版本信息",
           "length": 20,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "DRTD-OMU-QZTT-SV1.0",
           "unit": ""
@@ -72,7 +67,6 @@
           "objectId": 16,
           "name": "站点编号",
           "length": 4,
-          "mode": "可读可设置",
           "readOnly": false,
           "value": "21120006",
           "unit": ""
@@ -87,7 +81,6 @@
           "objectId": 257,
           "name": "设备工作状态",
           "length": 1,
-          "mode": "只读",
           "readOnly": true,
           "value": "正常",
           "unit": ""
@@ -97,7 +90,6 @@
           "objectId": 258,
           "name": "机内温度",
           "length": 2,
-          "mode": "只读",
           "readOnly": true,
           "value": "36.5",
           "unit": "℃"

@@ -1,7 +1,7 @@
 // CSV 导出：UTF-8 BOM + CRLF，保证 Excel 直接打开不乱码。
 import { formatCollectedAt, snapshotTitle } from './snapshot.js'
 
-const HEADER = ['设备名称', '设备ID', '采集时间', '分类', '序号', '参数名称', '对象标识', 'length', '读写属性', '当前值', '单位']
+const HEADER = ['设备名称', '设备ID', '采集时间', '分类', '序号', '参数名称', '对象标识', 'length', '当前值', '单位']
 
 function csvEscape(value) {
   const s = value == null ? '' : String(value)
@@ -25,7 +25,6 @@ export function buildSnapshotCsv(snapshots) {
           p.name,
           p.key,
           p.length ?? '',
-          p.mode,
           p.value,
           p.unit,
         ].map(csvEscape).join(','))

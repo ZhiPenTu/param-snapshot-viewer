@@ -16,7 +16,7 @@
 | --- | --- |
 | `src/App.vue` | 顶栏、导入入口、拖拽、快照列表与详情布局 |
 | `src/components/` | `SnapshotList.vue`、`DeviceParamPanel.vue`、`UpdateChecker.vue` |
-| `src/lib/snapshot.js` | 快照格式的唯一解析入口，含版本兼容与去重标识 |
+| `src/lib/snapshot.js` | 快照格式的唯一解析入口，含精确版本校验与去重标识 |
 | `src/lib/csv.js` | CSV 生成（UTF-8 BOM + CRLF，Excel 直接打开不乱码） |
 | `src/lib/fileAccess.js` | 文件读写：桌面端走原生保存对话框，浏览器退化为下载 |
 | `src/lib/updates.js` | 更新检查与安装的前端入口 |
@@ -50,7 +50,7 @@ cargo check --manifest-path src-tauri/Cargo.toml
 
 - 组件用组合式 API，状态留在 `App.vue`，子组件通过 props/emit 交互。
 - 快照字段只在 `snapshot.js` 归一化，组件不直接读取原始 JSON 字段。
-- 新增可选字段不升 `version`；删除、改名或改变语义必须升版本，并保留旧版本兼容。
+- 新增可选字段不升 `version`；删除、改名或改变语义必须升版本。解析层只接受精确的当前版本，旧版本不兼容，需使用网管系统重新导出，不得为旧版本保留兼容分支。
 - 依赖保持精简，新增运行时依赖前先确认无法用现有库或原生能力完成。
 - 不为格式化引入新工具，沿用仓库现有的两空格缩进与无分号风格。
 
