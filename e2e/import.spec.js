@@ -24,14 +24,13 @@ test('导入多份快照后可切换设备并查看分类参数', async ({ page 
   await expect(page.locator('.device-header-strip')).toContainText('设备IP:192.0.2.31')
   await expect(page.locator('.param-tab')).toHaveCount(2)
 
-  // 切回第一份，检查表格内容
+  // 切回第一份，检查卡片内容
   await items.filter({ hasText: '测试近端机' }).click()
   await expect(page.locator('.device-header-strip')).toContainText('WJQ400D数字光纤直放站近端机')
-  const rows = page.locator('.el-table__body-wrapper tbody tr')
+  const rows = page.locator('.param-card')
   await expect(rows).toHaveCount(6)
   await expect(rows.first()).toContainText('设备厂商代码')
   await expect(rows.first().locator('input')).toHaveValue('10')
-  await expect(page.locator('.el-table__header-wrapper')).not.toContainText('读写属性')
 
   // 切换分类页签
   await page.locator('.param-tab', { hasText: '设备状态信息' }).click()
@@ -44,8 +43,48 @@ test('搜索可跨分类命中参数', async ({ page }) => {
   await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
   await page.locator('.param-search input').fill('光功率')
   await expect(page.locator('.search-summary')).toContainText('命中 1 个')
-  await expect(page.locator('.el-table__body-wrapper tbody tr')).toHaveCount(1)
-  await expect(page.locator('.el-table__body-wrapper tbody tr').first()).toContainText('输入光功率')
+  await expect(page.locator('.param-card')).toHaveCount(1)
+  await expect(page.locator('.param-card').first()).toContainText('输入光功率')
+})
+
+test('参数按 sort 升序列优先排列，并按快照配置分列', async ({ page }) => {
+  const parameters = Array.from({ length: 30 }, (_, index) => ({
+    key: `0x${(index + 1).toString(16).toUpperCase().padStart(4, '0')}`,
+    objectId: index + 1,
+    // 故意让 sort 与 objectId 反向，验证查看器没有按 objectId 覆盖排序。
+    sort: 30 - index,
+    name: `参数${index + 1}`,
+    length: 1,
+    readOnly: true,
+    value: String(index + 1),
+    unit: '',
+  }))
+  const snapshot = {
+    format: 'param-snapshot',
+    version: 2,
+    exportedAt: '2026-11-04T10:00:00+08:00',
+    device: { name: '布局测试设备', devId: 1, ip: '192.0.2.1' },
+    categories: [{
+      name: '中频板状态信息',
+      minRowsPerColumn: 8,
+      parameters,
+    }],
+  }
+
+  await page.setInputFiles('input[type="file"]', {
+    name: 'layout.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(snapshot)),
+  })
+
+  const columns = page.locator('.param-card-column')
+  await expect(columns).toHaveCount(3)
+  await expect(columns.nth(0).locator('.param-card')).toHaveCount(10)
+  await expect(columns.nth(1).locator('.param-card')).toHaveCount(10)
+  await expect(columns.nth(2).locator('.param-card')).toHaveCount(10)
+  await expect(columns.nth(0).locator('.param-card').first()).toContainText('参数30')
+  await expect(columns.nth(0).locator('.param-card').last()).toContainText('参数21')
+  await expect(columns.nth(1).locator('.param-card').first()).toContainText('参数20')
 })
 
 test('重复导入同一份快照会跳过', async ({ page }) => {
@@ -111,7 +150,7 @@ test('系统真实导出的快照可直接导入展示', async ({ page }) => {
   await expect(page.locator('.snapshot-item')).toHaveCount(1)
   await expect(page.locator('.device-header-strip')).toContainText('测试近端机')
   await expect(page.locator('.param-tab')).toHaveCount(2)
-  const rows = page.locator('.el-table__body-wrapper tbody tr')
+  const rows = page.locator('.param-card')
   await expect(rows).toHaveCount(6)
   await expect(rows.nth(4)).toContainText('监控版本信息')
   await expect(rows.nth(4).locator('input')).toHaveValue('DRTD-OMU-QZTT-SV1.0')

@@ -40,31 +40,38 @@
       在全部 {{ totalParameters }} 个参数中命中 {{ rows.length }} 个
     </div>
 
-    <div class="param-table-wrap">
-      <el-table
-        :data="rows"
-        border
-        height="100%"
-        size="small"
-        :row-class-name="rowClassName"
-      >
-        <el-table-column prop="no" label="序号" width="60" />
-        <el-table-column v-if="searching" prop="categoryName" label="分类" width="170" show-overflow-tooltip />
-        <el-table-column prop="name" label="参数名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="key" label="对象标识" width="100" />
-        <el-table-column prop="length" label="length" width="80" />
-        <el-table-column prop="value" label="当前值" min-width="220">
-          <template #default="{ row }">
-            <el-input :model-value="row.value" readonly size="small" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="unit" label="单位" width="80" />
-        <template #empty>
-          <span class="table-empty">
-            {{ searching ? '没有匹配的参数' : '该分类下暂无参数' }}
-          </span>
-        </template>
-      </el-table>
+    <div class="param-card-wrap">
+      <div v-if="paramColumns.length" class="param-card-grid">
+        <div
+          v-for="(column, columnIndex) in paramColumns"
+          :key="columnIndex"
+          class="param-card-column"
+        >
+          <div v-for="row in column" :key="row.key" class="param-card">
+            <div class="param-card-name-cell">
+              <el-tooltip placement="top" effect="dark">
+                <template #content>
+                  <div class="param-tip">
+                    <div class="param-tip-name">{{ row.name }}</div>
+                    <div>对象标识：{{ row.key }}</div>
+                    <div>length：{{ row.length ?? '—' }}</div>
+                    <div>读写属性：{{ row.readOnly ? '只读' : '可读可设置' }}</div>
+                  </div>
+                </template>
+                <span class="param-card-name">{{ row.name }}</span>
+              </el-tooltip>
+              <span v-if="searching" class="param-card-category">{{ row.categoryName }}</span>
+            </div>
+            <div class="param-card-value">
+              <el-input :model-value="row.value" readonly size="small" />
+              <span class="param-card-unit" :title="row.unit">{{ row.unit }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="card-empty">
+        {{ searching ? '没有匹配的参数' : '该分类下暂无参数' }}
+      </div>
     </div>
   </section>
 </template>
@@ -72,6 +79,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { formatCollectedAt } from '../lib/snapshot.js'
+import {
+  buildParamColumns,
+  compareParamRows,
+  resolveMinRowsPerColumn,
+} from '../lib/paramLayout.js'
 
 const props = defineProps({
   snapshot: { type: Object, required: true },
@@ -99,7 +111,7 @@ const searching = computed(() => keyword.value.trim().length > 0)
 const allParameters = computed(() => {
   const out = []
   for (const category of props.snapshot.categories) {
-    for (const p of category.parameters) {
+    for (const p of category.parameters.slice().sort(compareParamRows)) {
       out.push({ ...p, categoryName: category.name })
     }
   }
@@ -108,20 +120,29 @@ const allParameters = computed(() => {
 
 const rows = computed(() => {
   if (!searching.value) {
-    return props.snapshot.categories[activeIndex.value]?.parameters || []
+    const parameters = props.snapshot.categories[activeIndex.value]?.parameters || []
+    return parameters.slice().sort(compareParamRows)
   }
   const needle = keyword.value.trim().toLowerCase()
   return allParameters.value.filter((p) =>
     p.name.toLowerCase().includes(needle) || p.key.toLowerCase().includes(needle))
 })
 
+const paramColumns = computed(() => {
+  if (!rows.value.length) return []
+  const activeCategory = props.snapshot.categories[activeIndex.value]
+  const categoryName = searching.value ? '' : activeCategory?.name
+  const configured = searching.value ? null : activeCategory?.minRowsPerColumn
+  const minRows = configured ?? resolveMinRowsPerColumn({
+    devType: props.snapshot.device.devType,
+    categoryName,
+  })
+  return buildParamColumns(rows.value, minRows)
+})
+
 function selectCategory(index) {
   activeIndex.value = index
   keyword.value = ''
-}
-
-function rowClassName({ rowIndex }) {
-  return rowIndex % 2 === 1 ? 'param-row-alt' : ''
 }
 </script>
 
@@ -251,28 +272,129 @@ function rowClassName({ rowIndex }) {
   flex-shrink: 0;
 }
 
-.param-table-wrap {
+.param-card-wrap {
   flex: 1 1 0;
   min-height: 0;
   background: #ffffff;
   border: 1px solid #e4e7ed;
   border-radius: 3px;
+  overflow-x: auto;
+  overflow-y: auto;
+  padding: 2px;
+}
+.param-card-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.param-card-wrap::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 5px;
+}
+.param-card-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+.param-card-wrap::-webkit-scrollbar:vertical {
+  display: none;
+}
+
+.param-card-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: max-content;
+  min-width: 100%;
+}
+
+.param-card-column {
+  display: flex;
+  flex: 1 0 340px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 340px;
+}
+
+.param-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 260px);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 1px 10px;
+  background: #ffffff;
+  border: 1px solid #ebeef5;
+  border-radius: 3px;
+}
+
+.param-card:hover {
+  border-color: #c6e2ff;
+  box-shadow: 0 1px 4px rgba(64, 158, 255, 0.12);
+}
+
+.param-card-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.param-card-name {
+  min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #303133;
+  cursor: default;
 }
 
-.param-table-wrap :deep(.el-table) {
-  height: 100%;
+.param-card-category {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #f2f6fa;
+  color: #7b8794;
+  font-size: 11px;
 }
 
-.param-table-wrap :deep(.el-input__wrapper) {
+.param-card-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.param-card-value :deep(.el-input) {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.param-card-value :deep(.el-input__wrapper) {
   background: #eeeeee;
 }
 
-.param-table-wrap :deep(.param-row-alt td.el-table__cell) {
-  background: #fafbfc;
+.param-card-unit {
+  flex: 0 0 40px;
+  width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #909399;
 }
 
-.table-empty {
+.param-tip {
+  line-height: 1.6;
+}
+
+.param-tip-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.card-empty {
+  padding: 18px 12px;
   color: #909399;
   font-size: 13px;
 }

@@ -24,6 +24,7 @@ function normalizeParameter(raw, index) {
     no: index + 1,
     key,
     objectId: toNumberOrNull(p.objectId),
+    sort: toNumberOrNull(p.sort),
     name: text(p.name),
     length: toNumberOrNull(p.length),
     readOnly: p.readOnly === true,
@@ -37,6 +38,7 @@ function normalizeCategory(raw) {
   const parameters = Array.isArray(c.parameters) ? c.parameters.map(normalizeParameter) : []
   return {
     name: text(c.name) || '未分类',
+    minRowsPerColumn: toNumberOrNull(c.minRowsPerColumn),
     parameters,
     count: parameters.length,
   }
@@ -49,6 +51,7 @@ function normalizeDevice(raw) {
     typeName: text(d.typeName),
     devId: d.devId ?? null,
     devSubId: d.devSubId ?? null,
+    devType: toNumberOrNull(d.devType),
     ip: text(d.ip),
     pollResult: text(d.pollResult),
     pollResultLabel: text(d.pollResultLabel),

@@ -20,6 +20,7 @@
 | `typeName` | 设备类型名称 |
 | `devId` | 设备 ID |
 | `devSubId` | 设备子 ID |
+| `devType` | 设备类型编号（可选），用于匹配查看器的分类布局配置 |
 | `ip` | 设备 IP |
 | `pollResult` | 轮询结果原始值，如 `success`／`fail` |
 | `pollResultLabel` | 轮询结果中文文案，如 `完成` |
@@ -28,17 +29,33 @@
 
 ## categories
 
-每个分类包含 `name` 与 `parameters`。参数项：
+每个分类包含 `name`、`minRowsPerColumn` 与 `parameters`。参数项：
+
+| 字段 | 说明 |
+| --- | --- |
+| `name` | 分类名称 |
+| `minRowsPerColumn` | 可选。每列最少显示多少个参数；导出时由网管系统的布局配置写入，查看器优先使用该值 |
+| `parameters` | 参数数组，按 `sort` 升序导出 |
 
 | 字段 | 说明 |
 | --- | --- |
 | `key` | 参数对象标识的十六进制文本，如 `0x0001`，是参数的主键 |
 | `objectId` | 对象标识的十进制值 |
+| `sort` | 可选。模板项排序号；查看器按此值升序展示，缺失时按 `objectId` 兜底 |
 | `name` | 参数名称 |
 | `length` | 参数长度（字节） |
 | `readOnly` | 是否只读 |
 | `value` | 当前值（已按协议解释后的展示值） |
 | `unit` | 单位，可能为空字符串 |
+
+## 布局展示
+
+参数按 `sort` 从小到大、从上到下填满一列后再进入下一列。列数由 `minRowsPerColumn` 推导：
+
+- 列数 = `floor(参数总数 / minRowsPerColumn)`，再把余数均摊到前几列；
+- 因此每列参数数量不少于配置值；参数总数不足配置值时只保留一列；
+- 列数超出窗口宽度时使用横向滚动，不再为参数区增加纵向滚动条；
+- 快照没有 `minRowsPerColumn` 时，查看器使用 `src/config/deviceParamLayout.js` 中的兜底配置。
 
 ## 示例
 
