@@ -31,11 +31,11 @@
         <DeviceParamPanel v-if="current" :snapshot="current" />
 
         <div v-else class="empty-state">
-          <div class="empty-icon">JSON</div>
+          <div class="empty-icon">XML</div>
           <p class="empty-title">把网管系统导出的参数快照拖到这里</p>
-          <p class="empty-hint">也可以点击下方按钮选择文件，支持一次导入多份</p>
+          <p class="empty-hint">也可以点击下方按钮选择 XML 文件，支持一次导入多份</p>
           <button class="primary-action" @click="pickFiles">选择文件导入</button>
-          <p class="empty-foot">快照文件由网管系统「轮询结果 - 查看参数」导出</p>
+          <p class="empty-foot">快照文件由网管系统按设备参数模板导出</p>
         </div>
 
         <div v-if="dragActive" class="drop-mask">松开即可导入快照</div>
@@ -46,7 +46,7 @@
       ref="fileInput"
       class="file-input"
       type="file"
-      accept=".json,application/json"
+      accept=".xml,application/xml,text/xml"
       multiple
       @change="onFileInputChange"
     />
@@ -63,7 +63,7 @@ import { readTextFile, saveTextFile } from './lib/fileAccess.js'
 import { buildSnapshotCsv } from './lib/csv.js'
 import {
   formatClock,
-  parseSnapshot,
+  parseSnapshotsXml,
   sanitizeFileName,
   snapshotTitle,
 } from './lib/snapshot.js'
@@ -100,19 +100,24 @@ async function importFiles(files) {
   let lastAddedId = null
 
   for (const file of files) {
-    if (!/\.json$/i.test(file.name)) {
-      failures.push(`${file.name}：不是 JSON 文件`)
+    if (!/\.xml$/i.test(file.name)) {
+      failures.push(
+        /\.json$/i.test(file.name)
+          ? `${file.name}：这是旧版 JSON 快照，已不再支持；请使用网管系统重新导出 XML 快照`
+          : `${file.name}：不是 XML 文件`,
+      )
       continue
     }
     try {
-      const parsed = JSON.parse(await readTextFile(file))
-      const items = Array.isArray(parsed) ? parsed : [parsed]
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('文件超过 10 MB，请确认是否选择了正确的快照')
+      }
+      const items = parseSnapshotsXml(await readTextFile(file), { fileName: file.name })
       if (!items.length) {
         failures.push(`${file.name}：文件内容为空`)
         continue
       }
-      for (const item of items) {
-        const snapshot = parseSnapshot(item, { fileName: file.name })
+      for (const snapshot of items) {
         if (snapshots.value.some((s) => s.id === snapshot.id)) {
           duplicated += 1
           continue
@@ -122,7 +127,7 @@ async function importFiles(files) {
         lastAddedId = snapshot.id
       }
     } catch (err) {
-      const reason = err instanceof SyntaxError ? 'JSON 格式有误' : (err?.message || '解析失败')
+      const reason = err?.message || '解析失败'
       failures.push(`${file.name}：${reason}`)
     }
   }

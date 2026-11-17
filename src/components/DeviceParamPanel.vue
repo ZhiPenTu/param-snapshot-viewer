@@ -4,6 +4,7 @@
       <span class="header-name">{{ snapshot.device.name || '未命名设备' }}</span>
       <span class="header-type">{{ snapshot.device.typeName || '—' }}</span>
       <span class="header-id">设备ID:{{ snapshot.device.devId ?? '—' }}</span>
+      <span class="header-sub-id">设备子ID:{{ formatSubId(snapshot.device.devSubId) }}</span>
       <span class="header-ip">设备IP:{{ snapshot.device.ip || '—' }}</span>
       <div class="header-right-meta">
         <span v-if="snapshot.device.pollResultLabel" :class="['result-pill', statusClass]">
@@ -36,12 +37,20 @@
       />
     </div>
 
-    <div v-if="searching" class="search-summary">
-      在全部 {{ totalParameters }} 个参数中命中 {{ rows.length }} 个
+    <div class="param-grid-toolbar">
+      <span class="readonly-chip">只读查看</span>
+      <span class="param-grid-selected">
+        {{ searching
+          ? `在全部 ${totalParameters} 个参数中命中 ${rows.length} 个`
+          : `当前分类 ${rows.length} 个参数` }}
+      </span>
     </div>
 
     <div class="param-card-wrap">
-      <div v-if="paramColumns.length" class="param-card-grid">
+      <div
+        v-if="paramColumns.length"
+        :class="['param-card-grid', paramColumns.length === 1 ? 'is-single-column' : '']"
+      >
         <div
           v-for="(column, columnIndex) in paramColumns"
           :key="columnIndex"
@@ -56,6 +65,7 @@
                     <div>对象标识：{{ row.key }}</div>
                     <div>length：{{ row.length ?? '—' }}</div>
                     <div>读写属性：{{ row.readOnly ? '只读' : '可读可设置' }}</div>
+                    <div v-if="row.valueExplain" class="param-tip-detail">{{ row.valueExplain }}</div>
                   </div>
                 </template>
                 <span class="param-card-name">{{ row.name }}</span>
@@ -132,13 +142,18 @@ const paramColumns = computed(() => {
   if (!rows.value.length) return []
   const activeCategory = props.snapshot.categories[activeIndex.value]
   const categoryName = searching.value ? '' : activeCategory?.name
-  const configured = searching.value ? null : activeCategory?.minRowsPerColumn
-  const minRows = configured ?? resolveMinRowsPerColumn({
+  const minRows = resolveMinRowsPerColumn({
     devType: props.snapshot.device.devType,
     categoryName,
+    minRowsPerColumn: searching.value ? null : activeCategory?.minRowsPerColumn,
   })
   return buildParamColumns(rows.value, minRows)
 })
+
+function formatSubId(value) {
+  if (value == null || value === '') return '—'
+  return String(value).padStart(2, '0')
+}
 
 function selectCategory(index) {
   activeIndex.value = index
@@ -177,6 +192,7 @@ function selectCategory(index) {
 }
 
 .header-id,
+.header-sub-id,
 .header-ip {
   font-weight: 500;
 }
@@ -265,22 +281,36 @@ function selectCategory(index) {
   flex: 0 0 220px;
 }
 
-.search-summary {
+.param-grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+  flex-shrink: 0;
+}
+
+.readonly-chip {
+  padding: 1px 8px;
+  border: 1px solid #c8d9ec;
+  border-radius: 10px;
+  background: #f3f8fe;
+  color: #3f72a6;
+  font-size: 11px;
+}
+
+.param-grid-selected {
   font-size: 12px;
   color: #7b8794;
-  padding: 0 2px;
-  flex-shrink: 0;
 }
 
 .param-card-wrap {
   flex: 1 1 0;
   min-height: 0;
-  background: #ffffff;
-  border: 1px solid #e4e7ed;
-  border-radius: 3px;
+  background: #f7f9fc;
+  border-radius: 4px;
   overflow-x: auto;
   overflow-y: auto;
-  padding: 2px;
+  padding: 6px;
 }
 .param-card-wrap::-webkit-scrollbar {
   width: 10px;
@@ -300,35 +330,54 @@ function selectCategory(index) {
 .param-card-grid {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 12px;
   width: max-content;
   min-width: 100%;
 }
 
 .param-card-column {
   display: flex;
-  flex: 1 0 340px;
+  flex: 0 0 480px;
   flex-direction: column;
-  gap: 4px;
-  min-width: 340px;
+  gap: 2px;
+  width: 480px;
+  min-width: 480px;
+  max-width: 480px;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow:
+    0 2px 6px rgba(31, 45, 61, 0.12),
+    0 8px 20px rgba(31, 45, 61, 0.08);
+}
+
+.param-card-grid.is-single-column {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.param-card-grid.is-single-column .param-card-column {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 720px;
 }
 
 .param-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 260px);
+  grid-template-columns: minmax(160px, 1fr) 220px;
   align-items: center;
   gap: 8px;
   min-width: 0;
-  min-height: 30px;
-  padding: 1px 10px;
-  background: #ffffff;
-  border: 1px solid #ebeef5;
-  border-radius: 3px;
+  min-height: 32px;
+  padding: 4px 6px;
+  background: transparent;
+  border-radius: 4px;
 }
 
 .param-card:hover {
-  border-color: #c6e2ff;
-  box-shadow: 0 1px 4px rgba(64, 158, 255, 0.12);
+  background: #f5f9ff;
 }
 
 .param-card-name-cell {
@@ -371,7 +420,8 @@ function selectCategory(index) {
 }
 
 .param-card-value :deep(.el-input__wrapper) {
-  background: #eeeeee;
+  background: #f0f2f5;
+  box-shadow: 0 0 0 1px #e4e7ed inset;
 }
 
 .param-card-unit {
@@ -391,6 +441,13 @@ function selectCategory(index) {
 .param-tip-name {
   font-weight: 600;
   margin-bottom: 2px;
+}
+
+.param-tip-detail {
+  max-width: 360px;
+  margin-top: 4px;
+  color: #cfd8e3;
+  white-space: pre-wrap;
 }
 
 .card-empty {

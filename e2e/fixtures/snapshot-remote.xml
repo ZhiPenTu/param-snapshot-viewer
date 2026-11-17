@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ParamSnapshots FormatVersion="3" ExportedAt="2026-10-23T15:04:12+08:00">
+  <Snapshot
+    DeviceName="测试远端机"
+    DeviceTypeName="WJQ400D数字光纤直放站远端机"
+    DevId="21120007"
+    DevSubId="1"
+    DevType="204"
+    DeviceIp="192.0.2.31"
+    PollResult="success"
+    PollResultLabel="完成"
+    CollectedAt="2026-10-23T15:04:12"
+    FinishedAt="2026-10-23T15:04:18">
+    <Parameters>
+      <Parameter ObjectId="0x0001" Name="设备厂商代码" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="1" CategoryName="设备基本信息" Value="10" />
+      <Parameter ObjectId="0x0003" Name="设备型号" DataType="str20" Length="20" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="2" CategoryName="设备基本信息" Value="WJQ400" />
+      <Parameter ObjectId="0x0010" Name="站点编号" DataType="uint4" Length="4" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="3" CategoryName="设备基本信息" Value="21120007" />
+      <Parameter ObjectId="0x0201" Name="上行功率补偿" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="1" Unit="dB" CategoryName="功率补偿" Value="3" />
+      <Parameter ObjectId="0x0202" Name="下行功率补偿" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="2" Unit="dB" CategoryName="功率补偿" Value="3" />
+    </Parameters>
+    <Layout DefaultMinRowsPerColumn="8">
+      <Category Name="设备基本信息" MinRowsPerColumn="10" Sort="1" />
+      <Category Name="功率补偿" MinRowsPerColumn="8" Sort="2" />
+    </Layout>
+  </Snapshot>
+</ParamSnapshots>

@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 test('导入多份快照后可切换设备并查看分类参数', async ({ page }) => {
   await expect(page.getByText('把网管系统导出的参数快照拖到这里')).toBeVisible()
 
-  await page.setInputFiles('input[type="file"]', [fixture('snapshot-near.json'), fixture('snapshot-remote.json')])
+  await page.setInputFiles('input[type="file"]', [fixture('snapshot-near.xml'), fixture('snapshot-remote.xml')])
 
   const items = page.locator('.snapshot-item')
   await expect(items).toHaveCount(2)
@@ -40,14 +40,14 @@ test('导入多份快照后可切换设备并查看分类参数', async ({ page 
 })
 
 test('搜索可跨分类命中参数', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.xml'))
   await page.locator('.param-search input').fill('光功率')
-  await expect(page.locator('.search-summary')).toContainText('命中 1 个')
+  await expect(page.locator('.param-grid-selected')).toContainText('命中 1 个')
   await expect(page.locator('.param-card')).toHaveCount(1)
   await expect(page.locator('.param-card').first()).toContainText('输入光功率')
 })
 
-test('参数按 sort 升序列优先排列，并按快照配置分列', async ({ page }) => {
+test('参数按 sort 升序列优先排列，并按快照配置固定行数分列', async ({ page }) => {
   const parameters = Array.from({ length: 30 }, (_, index) => ({
     key: `0x${(index + 1).toString(16).toUpperCase().padStart(4, '0')}`,
     objectId: index + 1,
@@ -59,68 +59,179 @@ test('参数按 sort 升序列优先排列，并按快照配置分列', async ({
     value: String(index + 1),
     unit: '',
   }))
-  const snapshot = {
-    format: 'param-snapshot',
-    version: 2,
-    exportedAt: '2026-11-04T10:00:00+08:00',
-    device: { name: '布局测试设备', devId: 1, ip: '192.0.2.1' },
-    categories: [{
-      name: '中频板状态信息',
-      minRowsPerColumn: 8,
-      parameters,
-    }],
-  }
+  const parameterXml = parameters.map((parameter) => (
+    `<Parameter ObjectId="${parameter.key}" Name="${parameter.name}" DataType="uint1" Length="1" `
+    + `ShowType="TextBox" ReadOnly="true" IsAlarm="false" Sort="${parameter.sort}" `
+    + `CategoryName="中频板状态信息" Value="${parameter.value}" />`
+  )).join('')
+  const snapshotXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ParamSnapshots FormatVersion="3" ExportedAt="2026-11-04T10:00:00+08:00">
+  <Snapshot DeviceName="布局测试设备" DeviceTypeName="测试类型" DevId="1" DevSubId="0" DevType="203"
+    DeviceIp="192.0.2.1" PollResult="success" PollResultLabel="完成"
+    CollectedAt="2026-11-04T10:00:00" FinishedAt="2026-11-04T10:00:05">
+    <Parameters>${parameterXml}</Parameters>
+    <Layout DefaultMinRowsPerColumn="8">
+      <Category Name="中频板状态信息" MinRowsPerColumn="8" Sort="1" />
+    </Layout>
+  </Snapshot>
+</ParamSnapshots>`
 
   await page.setInputFiles('input[type="file"]', {
-    name: 'layout.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(snapshot)),
+    name: 'layout.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(snapshotXml),
   })
 
   const columns = page.locator('.param-card-column')
-  await expect(columns).toHaveCount(3)
-  await expect(columns.nth(0).locator('.param-card')).toHaveCount(10)
-  await expect(columns.nth(1).locator('.param-card')).toHaveCount(10)
-  await expect(columns.nth(2).locator('.param-card')).toHaveCount(10)
+  await expect(columns).toHaveCount(4)
+  await expect(columns.nth(0).locator('.param-card')).toHaveCount(8)
+  await expect(columns.nth(1).locator('.param-card')).toHaveCount(8)
+  await expect(columns.nth(2).locator('.param-card')).toHaveCount(8)
+  await expect(columns.nth(3).locator('.param-card')).toHaveCount(6)
   await expect(columns.nth(0).locator('.param-card').first()).toContainText('参数30')
-  await expect(columns.nth(0).locator('.param-card').last()).toContainText('参数21')
-  await expect(columns.nth(1).locator('.param-card').first()).toContainText('参数20')
+  await expect(columns.nth(0).locator('.param-card').last()).toContainText('参数23')
+  await expect(columns.nth(1).locator('.param-card').first()).toContainText('参数22')
+  await expect(columns.nth(3).locator('.param-card').last()).toContainText('参数1')
+})
+
+test('12 个参数按每列 8 行分成 8/4 两列', async ({ page }) => {
+  const parameterXml = Array.from({ length: 12 }, (_, index) => (
+    `<Parameter ObjectId="0x${(index + 1).toString(16).toUpperCase().padStart(4, '0')}" `
+    + `Name="参数${index + 1}" Length="1" ReadOnly="true" Sort="${index + 1}" `
+    + `CategoryName="设备状态信息" Value="${index + 1}" />`
+  )).join('')
+  const snapshotXml = `<?xml version="1.0"?>
+<ParamSnapshots FormatVersion="3" ExportedAt="2026-11-04T10:00:00+08:00">
+  <Snapshot DeviceName="两列测试设备" DevId="2" DevType="203" DeviceIp="192.0.2.2">
+    <Parameters>${parameterXml}</Parameters>
+    <Layout DefaultMinRowsPerColumn="8">
+      <Category Name="设备状态信息" MinRowsPerColumn="8" Sort="1" />
+    </Layout>
+  </Snapshot>
+</ParamSnapshots>`
+  await page.setInputFiles('input[type="file"]', {
+    name: 'two-columns.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(snapshotXml),
+  })
+
+  const columns = page.locator('.param-card-column')
+  await expect(columns).toHaveCount(2)
+  await expect(columns.nth(0).locator('.param-card')).toHaveCount(8)
+  await expect(columns.nth(1).locator('.param-card')).toHaveCount(4)
+})
+
+test('分类页签按 Layout.Sort 排列', async ({ page }) => {
+  const snapshotXml = `<?xml version="1.0"?>
+<ParamSnapshots FormatVersion="3" ExportedAt="2026-11-04T10:00:00+08:00">
+  <Snapshot DeviceName="分类排序测试" DevId="3" DevType="203" DeviceIp="192.0.2.3">
+    <Parameters>
+      <Parameter ObjectId="0x0101" Name="后置分类参数" Length="1" ReadOnly="true" Sort="1" CategoryName="设备状态信息" Value="1" />
+      <Parameter ObjectId="0x0001" Name="前置分类参数" Length="1" ReadOnly="true" Sort="1" CategoryName="设备基本信息" Value="2" />
+    </Parameters>
+    <Layout DefaultMinRowsPerColumn="8">
+      <Category Name="设备基本信息" MinRowsPerColumn="8" Sort="1" />
+      <Category Name="设备状态信息" MinRowsPerColumn="8" Sort="2" />
+    </Layout>
+  </Snapshot>
+</ParamSnapshots>`
+  await page.setInputFiles('input[type="file"]', {
+    name: 'category-order.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(snapshotXml),
+  })
+
+  await expect(page.locator('.param-tab')).toHaveText([
+    /设备基本信息\s*1/,
+    /设备状态信息\s*1/,
+  ])
 })
 
 test('重复导入同一份快照会跳过', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.xml'))
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.xml'))
   await expect(page.locator('.snapshot-item')).toHaveCount(1)
   await expect(page.locator('.el-message--warning')).toContainText('已经导入过了')
 })
 
-test('拒绝版本 1 的旧版快照并提示重新导出', async ({ page }) => {
+test('拒绝旧版 JSON 快照并提示使用 XML 重新导出', async ({ page }) => {
   await page.setInputFiles('input[type="file"]', fixture('snapshot-v1.json'))
 
-  await expect(page.locator('.el-message--error')).toContainText('快照版本 1 已不再支持')
-  await expect(page.locator('.el-message--error')).toContainText('请使用网管系统重新导出为版本 2 的快照')
+  await expect(page.locator('.el-message--error')).toContainText('这是旧版 JSON 快照')
+  await expect(page.locator('.el-message--error')).toContainText('重新导出 XML 快照')
   await expect(page.locator('.snapshot-item')).toHaveCount(0)
   await expect(page.locator('.toolbar-meta')).toHaveText('已导入 0 份')
 })
 
-test('拒绝高于支持版本的快照并提示升级查看器', async ({ page }) => {
+test('拒绝旧版 XML 快照并提示重新导出', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-v2.xml'))
+
+  await expect(page.locator('.el-message--error')).toContainText('快照格式版本 2 已不再支持')
+  await expect(page.locator('.el-message--error')).toContainText('重新导出 XML 快照')
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+})
+
+test('拒绝高于支持版本的 XML 快照并提示升级查看器', async ({ page }) => {
   await page.setInputFiles('input[type="file"]', {
-    name: 'snapshot-v3.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify({
-      format: 'param-snapshot',
-      version: 3,
-      device: { name: '未来版本设备' },
-      categories: [],
-    })),
+    name: 'snapshot-v4.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(
+      '<?xml version="1.0"?><ParamSnapshots FormatVersion="4" ExportedAt="2026-11-04T10:00:00+08:00" />',
+    ),
   })
 
-  await expect(page.locator('.el-message--error')).toContainText('快照版本 3 高于本工具支持的版本 2')
+  await expect(page.locator('.el-message--error')).toContainText('快照格式版本 4 高于本工具支持的版本 3')
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+})
+
+test('拒绝包含 DOCTYPE 或 ENTITY 声明的 XML', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', {
+    name: 'unsafe.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(
+      '<?xml version="1.0"?>'
+      + '<!DOCTYPE ParamSnapshots [<!ENTITY unsafe "value">]>'
+      + '<ParamSnapshots FormatVersion="3"><Snapshot DeviceName="测试">&unsafe;</Snapshot></ParamSnapshots>',
+    ),
+  })
+
+  await expect(page.locator('.el-message--error')).toContainText('不允许包含 DOCTYPE 或 ENTITY')
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+})
+
+test('拒绝重复 ObjectId 的快照', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', {
+    name: 'duplicate-object-id.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(
+      '<?xml version="1.0"?>'
+      + '<ParamSnapshots FormatVersion="3" ExportedAt="2026-11-04T10:00:00+08:00">'
+      + '<Snapshot DeviceName="重复参数测试" DevId="4" DevType="203"><Parameters>'
+      + '<Parameter ObjectId="0x0001" Name="参数A" CategoryName="设备基本信息" Value="1" />'
+      + '<Parameter ObjectId="0x0001" Name="参数B" CategoryName="设备基本信息" Value="2" />'
+      + '</Parameters></Snapshot></ParamSnapshots>',
+    ),
+  })
+
+  await expect(page.locator('.el-message--error')).toContainText('重复 ObjectId')
+  await expect(page.locator('.snapshot-item')).toHaveCount(0)
+})
+
+test('FormatVersion 必须精确为 3', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', {
+    name: 'version-3.0.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(
+      '<?xml version="1.0"?><ParamSnapshots FormatVersion="3.0" ExportedAt="2026-11-04T10:00:00+08:00" />',
+    ),
+  })
+
+  await expect(page.locator('.el-message--error')).toContainText('仅支持 FormatVersion="3"')
   await expect(page.locator('.snapshot-item')).toHaveCount(0)
 })
 
 test('导出当前设备 CSV 与全部 CSV', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', [fixture('snapshot-near.json'), fixture('snapshot-remote.json')])
+  await page.setInputFiles('input[type="file"]', [fixture('snapshot-near.xml'), fixture('snapshot-remote.xml')])
 
   const currentDownload = page.waitForEvent('download')
   await page.getByRole('button', { name: '导出当前设备' }).click()
@@ -138,7 +249,7 @@ test('导出当前设备 CSV 与全部 CSV', async ({ page }) => {
 })
 
 test('移除快照后回到空状态', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.xml'))
   await page.locator('.snapshot-item').hover()
   await page.getByTitle('移除该快照').click()
   await expect(page.locator('.snapshot-item')).toHaveCount(0)
@@ -146,7 +257,7 @@ test('移除快照后回到空状态', async ({ page }) => {
 })
 
 test('系统真实导出的快照可直接导入展示', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-system-export.json'))
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-system-export.xml'))
   await expect(page.locator('.snapshot-item')).toHaveCount(1)
   await expect(page.locator('.device-header-strip')).toContainText('测试近端机')
   await expect(page.locator('.param-tab')).toHaveCount(2)
@@ -156,25 +267,25 @@ test('系统真实导出的快照可直接导入展示', async ({ page }) => {
   await expect(rows.nth(4).locator('input')).toHaveValue('DRTD-OMU-QZTT-SV1.0')
 })
 
-test('批次数组文件一次导入整批设备', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-batch.json'))
+test('批次 XML 一次导入整批设备', async ({ page }) => {
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-batch.xml'))
 
   const items = page.locator('.snapshot-item')
   await expect(items).toHaveCount(2)
   await expect(page.locator('.toolbar-meta')).toHaveText('已导入 2 份')
 
-  // 默认展示数组最后一份
+  // 默认展示文件中的最后一份
   await expect(page.locator('.device-header-strip')).toContainText('测试远端机')
   await items.filter({ hasText: '测试近端机' }).click()
   await expect(page.locator('.device-header-strip')).toContainText('测试近端机')
   await expect(page.locator('.param-tab')).toHaveCount(2)
 })
 
-test('拖拽批次数组文件同样导入整批设备', async ({ page }) => {
-  const payload = fs.readFileSync(fixture('snapshot-batch.json'), 'utf8')
+test('拖拽批次 XML 同样导入整批设备', async ({ page }) => {
+  const payload = fs.readFileSync(fixture('snapshot-batch.xml'), 'utf8')
   const dataTransfer = await page.evaluateHandle((text) => {
     const dt = new DataTransfer()
-    dt.items.add(new File([text], '轮询参数批次_测试.json', { type: 'application/json' }))
+    dt.items.add(new File([text], '轮询参数批次_测试.xml', { type: 'application/xml' }))
     return dt
   }, payload)
 
@@ -185,7 +296,7 @@ test('拖拽批次数组文件同样导入整批设备', async ({ page }) => {
 })
 
 test('快照列表可以收起并展开', async ({ page }) => {
-  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.json'))
+  await page.setInputFiles('input[type="file"]', fixture('snapshot-near.xml'))
   await expect(page.locator('.snapshot-item')).toHaveCount(1)
 
   await page.getByRole('button', { name: '收起快照列表' }).click()

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ParamSnapshots FormatVersion="2" ExportedAt="2026-10-23T13:22:05+08:00">
+  <Snapshot
+    DeviceName="旧版测试设备"
+    DeviceTypeName="WJQ400D数字光纤直放站近端机"
+    DevId="21120006"
+    DevSubId="0"
+    DevType="203"
+    DeviceIp="192.0.2.30"
+    PollResult="success"
+    PollResultLabel="完成"
+    CollectedAt="2026-10-23T13:22:05"
+    FinishedAt="2026-10-23T13:22:11">
+    <Parameters>
+      <Parameter ObjectId="0x0001" Name="设备厂商代码" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="1" CategoryName="设备基本信息" Value="10" />
+    </Parameters>
+    <Layout DefaultMinRowsPerColumn="8">
+      <Category Name="设备基本信息" MinRowsPerColumn="8" Sort="1" />
+    </Layout>
+  </Snapshot>
+</ParamSnapshots>

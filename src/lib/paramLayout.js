@@ -7,7 +7,10 @@ function positiveInt(value, fallback) {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : fallback
 }
 
-export function resolveMinRowsPerColumn({ devType, categoryName } = {}) {
+export function resolveMinRowsPerColumn({ devType, categoryName, minRowsPerColumn } = {}) {
+  const explicit = positiveInt(minRowsPerColumn, null)
+  if (explicit != null) return explicit
+
   const config = DEVICE_PARAM_LAYOUT || {}
   const fallback = positiveInt(config.defaultMinRowsPerColumn, DEFAULT_MIN_ROWS)
   const category = String(categoryName || '')
@@ -39,15 +42,9 @@ export function buildParamColumns(rows, minRowsPerColumn) {
   const list = Array.isArray(rows) ? rows : []
   if (!list.length) return []
   const minRows = positiveInt(minRowsPerColumn, DEFAULT_MIN_ROWS)
-  const columnCount = Math.max(1, Math.floor(list.length / minRows))
-  const base = Math.floor(list.length / columnCount)
-  const remainder = list.length % columnCount
   const columns = []
-  let offset = 0
-  for (let index = 0; index < columnCount; index += 1) {
-    const size = base + (index < remainder ? 1 : 0)
-    columns.push(list.slice(offset, offset + size))
-    offset += size
+  for (let offset = 0; offset < list.length; offset += minRows) {
+    columns.push(list.slice(offset, offset + minRows))
   }
   return columns
 }

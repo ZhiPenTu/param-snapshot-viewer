@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ParamSnapshots FormatVersion="3" ExportedAt="2026-10-23T13:22:05+08:00">
+  <Snapshot
+    DeviceName="测试近端机"
+    DeviceTypeName="WJQ400D数字光纤直放站近端机"
+    DevId="21120006"
+    DevSubId="0"
+    DevType="203"
+    DeviceIp="192.0.2.30"
+    PollResult="success"
+    PollResultLabel="完成"
+    CollectedAt="2026-10-23T13:22:05"
+    FinishedAt="2026-10-23T13:22:11">
+    <Parameters>
+      <Parameter ObjectId="0x0001" Name="设备厂商代码" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="1" CategoryName="设备基本信息" Value="10" />
+      <Parameter ObjectId="0x0002" Name="设备类别" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="2" CategoryName="设备基本信息" Value="203" />
+      <Parameter ObjectId="0x0003" Name="设备型号" DataType="str20" Length="20" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="3" CategoryName="设备基本信息" Value="WJQ400" />
+      <Parameter ObjectId="0x0004" Name="设备生产序列号" DataType="str20" Length="20" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="4" CategoryName="设备基本信息" Value="" />
+      <Parameter ObjectId="0x0009" Name="监控版本信息" DataType="str20" Length="20" ShowType="TextBox" ReadOnly="true" IsAlarm="false" Sort="5" CategoryName="设备基本信息" Value="DRTD-OMU-QZTT-SV1.0" />
+      <Parameter ObjectId="0x0010" Name="站点编号" DataType="uint4" Length="4" ShowType="TextBox" ReadOnly="false" IsAlarm="false" Sort="6" CategoryName="设备基本信息" Value="21120006" />
+      <Parameter ObjectId="0x0101" Name="设备工作状态" DataType="uint1" Length="1" ShowType="TextBox" ReadOnly="true" IsAlarm="false" Sort="1" CategoryName="设备状态信息" Value="正常" />
+      <Parameter ObjectId="0x0102" Name="机内温度" DataType="sint2" Length="2" ShowType="TextBox" ReadOnly="true" IsAlarm="false" Sort="2" Unit="℃" CategoryName="设备状态信息" Value="36.5" />
+      <Parameter ObjectId="0x0103" Name="输入光功率" DataType="sint2" Length="2" ShowType="TextBox" ReadOnly="true" IsAlarm="false" Sort="3" Unit="dBm" CategoryName="设备状态信息" Value="-12.4" />
+    </Parameters>
+    <Layout DefaultMinRowsPerColumn="8">
+      <Category Name="设备基本信息" MinRowsPerColumn="10" Sort="1" />
+      <Category Name="设备状态信息" MinRowsPerColumn="8" Sort="2" />
+    </Layout>
+  </Snapshot>
+</ParamSnapshots>
