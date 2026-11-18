@@ -61,6 +61,14 @@ cargo check --manifest-path src-tauri/Cargo.toml
 - 区分「浏览器预览通过」与「桌面安装包已验证」，未执行的不宣称已通过。
 - 端到端用例依赖 `e2e/fixtures/` 中的样例快照，改动解析逻辑时同步确认用例仍覆盖单份与批次导入。
 
+## 构建缓存清理
+
+- 先用 `npm run clean:cache -- --dry-run` 确认范围，再执行 `npm run clean:cache`。
+- 默认只删除 `src-tauri/target/debug/incremental`，保留 `target/debug/deps`、`target/release`、Cargo 注册表和 `node_modules`，保证增量构建仍可复用依赖。
+- `--deep` 会删除整个 `target/debug`，只在磁盘紧张且可接受重新编译依赖时手动使用；不得接入日常构建或 CI。
+- 不清理 `~/.cargo`、安装包、用户导入的快照数据和凭据。
+- 清理前确认没有运行中的 Cargo/Tauri 构建；清理后至少重新执行一次 `cargo check` 或 `npm run build` 验证环境可用。
+
 ## Git 与发布
 
 - 完成改动后默认合并到主分支 `main`，不推送远程仓库。
