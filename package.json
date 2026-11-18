@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "clean:cache": "node scripts/clean-build-cache.mjs",
     "tauri": "tauri",
     "dev:app": "tauri dev",
     "build:app": "tauri build",
